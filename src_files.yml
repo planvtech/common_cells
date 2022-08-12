@@ -36,6 +36,7 @@ common_cells_all:
     - src/stream_fork.sv
     - src/stream_intf.sv
     - src/stream_join.sv
+    - src/stream_join_dynamic.sv
     - src/stream_mux.sv
     - src/sub_per_hash.sv
     - src/sync.sv
