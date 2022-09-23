@@ -123,34 +123,42 @@ module addr_decode #(
   // check_start:        Enforces a smaller start than end address.
   // check_idx:          Enforces a valid index in the rule.
   // check_overlap:      Warns if there are overlapping address regions.
-  always @(addr_map_i) #0 begin : proc_check_addr_map
-    if (!$isunknown(addr_map_i)) begin
+  rule_t [NoRules-1:0] addr_map;
+  //assign #1 addr_map = addr_map_i; 
+  always @(addr_map_i) begin
+    #1;
+    for (int unsigned i = 0; i < NoRules; i++) begin
+      addr_map[i] = addr_map_i[i];
+    end
+  end
+  always @(addr_map) #0 begin : proc_check_addr_map
+    if (!$isunknown(addr_map)) begin
       for (int unsigned i = 0; i < NoRules; i++) begin
-        check_start : assume (addr_map_i[i].start_addr < addr_map_i[i].end_addr) else
+        check_start : assume (addr_map[i].start_addr < addr_map[i].end_addr) else
           $fatal(1, $sformatf("This rule has a higher start than end address!!!\n\
               Violating rule %d.\n\
               Rule> IDX: %h START: %h END: %h\n\
               #####################################################",
-              i ,addr_map_i[i].idx, addr_map_i[i].start_addr, addr_map_i[i].end_addr));
+              i ,addr_map[i].idx, addr_map_i[i].start_addr, addr_map_i[i].end_addr));
         // check the SLV ids
-        check_idx : assume (addr_map_i[i].idx < NoIndices) else
+        check_idx : assume (addr_map[i].idx < NoIndices) else
             $fatal(1, $sformatf("This rule has a IDX that is not allowed!!!\n\
             Violating rule %d.\n\
             Rule> IDX: %h START: %h END: %h\n\
             Rule> MAX_IDX: %h\n\
             #####################################################",
-            i, addr_map_i[i].idx, addr_map_i[i].start_addr, addr_map_i[i].end_addr,
+            i, addr_map[i].idx, addr_map_i[i].start_addr, addr_map_i[i].end_addr,
             (NoIndices-1)));
         for (int unsigned j = i + 1; j < NoRules; j++) begin
           // overlap check
-          check_overlap : assume (!((addr_map_i[j].start_addr < addr_map_i[i].end_addr) &&
-                                    (addr_map_i[j].end_addr > addr_map_i[i].start_addr)))   else
+          check_overlap : assume (!((addr_map[j].start_addr < addr_map_i[i].end_addr) &&
+                                    (addr_map[j].end_addr > addr_map_i[i].start_addr)))   else
                $warning($sformatf("Overlapping address region found!!!\n\
               Rule %d: IDX: %h START: %h END: %h\n\
               Rule %d: IDX: %h START: %h END: %h\n\
               #####################################################",
-              i, addr_map_i[i].idx, addr_map_i[i].start_addr, addr_map_i[i].end_addr,
-              j, addr_map_i[j].idx, addr_map_i[j].start_addr, addr_map_i[j].end_addr));
+              i, addr_map[i].idx, addr_map_i[i].start_addr, addr_map_i[i].end_addr,
+              j, addr_map[j].idx, addr_map_i[j].start_addr, addr_map_i[j].end_addr));
         end
       end
     end
